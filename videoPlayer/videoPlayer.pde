@@ -20,14 +20,20 @@ Movie myMovie;
 int[] sections = { 0, 120, 386, 604, 745, 894, 1066  }; 
 int sectionCount = 7;
 
-void setup() {
+public void settings() {
   size(480, 360);
+}
+
+
+void setup() {
   /* start oscP5, listening for incoming messages at port 12000 */
   oscP5 = new OscP5(this, 12000);
   oscP5.plug(this, "startEvent", "/start");
   oscP5.plug(this, "stopEvent", "/stop");
 
-  myMovie = new Movie(this, "/Volumes/quartera/Dropbox/projet_myriam/video/hammani_motifsKabyles_codesSecretsFemmes.mp4");
+//  myMovie = new Movie(this, "/Volumes/quartera/Dropbox/projet_myriam/video/hammani_motifsKabyles_codesSecretsFemmes.mp4");
+  myMovie = new Movie(this, "/Users/bloit/Dropbox/projet_myriam/video/hammani_motifsKabyles_codesSecretsFemmes.mp4");
+
   myMovie.noLoop();
 }
 
