@@ -19,6 +19,8 @@ Movie myMovie;
 
 int[] sections = { 0, 120, 386, 604, 745, 894, 1066  }; 
 int sectionCount = 7;
+int currentSection = -1;
+int pitchSections = 3;
 
 public void settings() {
   size(480, 360);
@@ -28,11 +30,11 @@ public void settings() {
 void setup() {
   /* start oscP5, listening for incoming messages at port 12000 */
   oscP5 = new OscP5(this, 12000);
-  oscP5.plug(this, "startEvent", "/start");
-  oscP5.plug(this, "stopEvent", "/stop");
+  oscP5.plug(this, "audioAnalysis", "/audio/chan_0");
+
 
 //  myMovie = new Movie(this, "/Volumes/quartera/Dropbox/projet_myriam/video/hammani_motifsKabyles_codesSecretsFemmes.mp4");
-  myMovie = new Movie(this, "/Users/bloit/Dropbox/projet_myriam/video/hammani_motifsKabyles_codesSecretsFemmes.mp4");
+  myMovie = new Movie(this, "/Users/bloit/Dropbox/hammaniProject_media/video/hammani_motifsKabyles_codesSecretsFemmes.mp4");
 
   myMovie.noLoop();
 }
@@ -46,21 +48,19 @@ void movieEvent(Movie m) {
   m.read();
 }
 
-public void startEvent(int section) {
 
-
-  if (section < (sectionCount -1)){
-      println("START " + str(section));
-  //  myMovie.stop();
+// input values are normalized between 0-1
+public void audioAnalysis(float pitch, float amp, float voiced) {
   
-    myMovie.play();
-    myMovie.jump(sections[section]);
-  } else {
-    println("section index out of bounds");  
+  println("OSC INPUT " + str(pitch));
+  int sectionToPlay = int(floor(pitch * pitchSections));
+  println("section to play " + str(sectionToPlay));
+  if (sectionToPlay != currentSection ){
+     if (sectionToPlay < (sectionCount -1)){
+        println("--------------------------- change section to play " + str(sectionToPlay));
+        myMovie.play();
+        myMovie.jump(sections[sectionToPlay]);
+        currentSection = sectionToPlay;
+     }
   }
-}
-
-public void stopEvent() {
-  println("STOP ");
-  myMovie.stop();
 }
