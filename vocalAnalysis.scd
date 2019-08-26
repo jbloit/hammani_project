@@ -71,12 +71,27 @@ s.waitForBoot({
 		Out.kr(voicedOut, hasFreq.lag(1));
 	}).add;
 
+
+
+	SynthDef(\harmonizer, {|in=0, out=0, section=0|
+		var input, sig;
+		input = SoundIn.ar(in);
+
+		// ici tu fais 	ta sauce
+		sig = input;
+		// ....
+
+
+		Out.ar(out, sig);
+
+	}).add;
+
 	s.sync;
 
 
+	~harmo = Synth(\harmonizer);
+
 	// Poll the value of a signal periodically, and send over the value via OSC.
-
-
 	~uiMachine = NetAddr.new("127.0.0.1", 12000);
 
 	SystemClock.sched(0.0,
@@ -105,7 +120,8 @@ s.waitForBoot({
 								// Trigger a section change
 								~uiMachine.sendMsg("/section", section);
 
-								// TODO : trigger  for the audio harmonizer
+								// ici tu changes des trucs comme tu veux sur l'harmonizer en fonction de la section
+								~harmo.set(\section, section);
 
 
 
@@ -125,6 +141,7 @@ s.waitForBoot({
 
 	~player1 = Synth(\audioAnalyzer, [\in, 0, \meterOut, ~meterBusses[0], \voicedOut, ~voicedBusses[0], \pitchOut, ~pitchBusses[0] ] );
 	// ~player2 = Synth(\audioAnalyzer, [\in, 1, \meterOut, ~meterBusses[1], \voicedOut, ~voicedBusses[1], \pitchOut, ~pitchBusses[1] ] );
-};
+}
+;
 );
 
