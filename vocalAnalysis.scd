@@ -10,12 +10,8 @@ Run a pitch analysis periodically and send values over OSC
 s.waitForBoot({
 	//////////////////////////////////// synth def and busses
 
-
-	var winenv;
+	Buffer.freeAll;
 	Bus.clear;
-	// a custom envelope
-	winenv = Env([0, 1, 0], [0.5, 0.5], [8, -8]);
-	z = Buffer.sendCollection(s, winenv.discretize, 1);
 
 	// input
 
@@ -108,19 +104,6 @@ s.waitForBoot({
 
 
 
-	SynthDef(\harmonizer, { |out=0, gate = 1, amp = 1, envbuf,in=0|
-		var pan, env;
-		// use mouse x to control panning
-		pan = MouseX.kr(-1, 1);
-		env = EnvGen.kr(
-			Env([0, 1, 0], [1, 1], \sin, 1),
-			gate,
-			levelScale: amp,
-			doneAction: Done.freeSelf);
-		Out.ar(out,
-			GrainIn.ar(2, Impulse.kr(1), 1,SoundIn.ar(in), pan, envbuf) * env)
-	}).add;
-
 	s.sync;
 
 
@@ -182,7 +165,7 @@ s.waitForBoot({
 		};
 	);
 
-	~player1 = Synth.after(~player, \audioAnalyzer, [\in, 0, \meterOut, ~meterBusses[0], \voicedOut, ~voicedBusses[0], \pitchOut, ~pitchBusses[0] ] );
+	~player1 = Synth.after(~player, \audioAnalyzer, [\in, ~inputBus.index, \meterOut, ~meterBusses[0], \voicedOut, ~voicedBusses[0], \pitchOut, ~pitchBusses[0] ] );
 	// ~player2 = Synth(\audioAnalyzer, [\in, 1, \meterOut, ~meterBusses[1], \voicedOut, ~voicedBusses[1], \pitchOut, ~pitchBusses[1] ] );
 }
 ;

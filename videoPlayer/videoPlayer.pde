@@ -17,7 +17,17 @@ Movie myMovie;
 //Voix grave douce; 17 min 46 secondes - 19 min 46 secondes
 
 
-int[] sections = { 0, 120, 386, 604, 745, 894, 1066  }; 
+ //~sectionLabels = [
+ //0: "LO freq - LO amp", 
+ //1: "HI freq - LO amp",
+ //2: "LO freq - HI amp",
+ //3: "HI freq - HI amp" ];
+
+
+//int[] sections = { 0, 120, 386, 604, 745, 894, 1066}; 
+
+int[] sections = { 1066, 745, 120, 386}; 
+
 int sectionCount = 7;
 int currentSection = -1;
 int pitchSections = 3;
