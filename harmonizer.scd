@@ -1,11 +1,11 @@
-
+// Execute the following in order
 (
 // allocate a Buffer
 s = Server.local;
 b = Buffer.alloc(s, 44100 * 1.0, 1); // a four second 1 channel Buffer
 )
 
-
+Buffer.freeAll;
 (
 var winenv = Env([0.5, 1, 0.5], [1, 1], [8, -8]);
 z = Buffer.sendCollection(s, winenv.discretize, 1);
@@ -34,9 +34,9 @@ SynthDef(\harmonizer, { |envbuf = -4, gate = 1|
 (
 Tdef(\loo2p,{loop{
 	1.wait;
-	SynthDef(\help_RecordBuf, { arg out = 0, bufnum = 0, in=0;
+	SynthDef(\help_RecordBuf, { arg out = 0, bufnum = 0;
 		var input;
-		input=In.ar(in,1);
+		input=SoundIn.ar(0);
 		RecordBuf.ar(input, bufnum, doneAction: Done.freeSelf, loop: 0);
 	}).play(s,[\out, 0, \bufnum, b]);
 

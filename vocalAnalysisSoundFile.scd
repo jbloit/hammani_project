@@ -18,7 +18,7 @@ s.waitForBoot({
 	~inputBus = Bus.audio(s, 1); // audio bus to get input from, either soundin or sfplayer.
 	~sfBuffer=Buffer.cueSoundFile(s,"/Users/bloit/Dropbox/hammaniProject_media/audio/chant_julien.wav",0, 1);
 	SynthDef(\diskin,{|out=0|
-		var sig = SoundIn.ar(0);
+		var sig = DiskIn.ar(1, ~sfBuffer.bufnum);
 		Out.ar(out, sig);
 		Out.ar(0, sig);
 	};
@@ -33,7 +33,7 @@ s.waitForBoot({
 	// TODO: calibrate this in the app:
 	~minFreq = 90;
 	~maxFreq = 800;
-	~minAmp = 0.002; // amplitude threshold. under that, we consider the input as silence.
+	~minAmp = 0.001; // amplitude threshold. under that, we consider the input as silence.
 
 	~currentSection = -1;
 	~pitchTresh = 0.25; // considered "Hi pitch" above this thresh.
