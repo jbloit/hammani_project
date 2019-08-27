@@ -52,7 +52,7 @@ void movieEvent(Movie m) {
 // section change
 public void newSection(int section) {
   
- 
+ println("OSC SECTION INPUT " + str(section));
   if (section > -1){
      myMovie.play();
     myMovie.jump(sections[section]);
