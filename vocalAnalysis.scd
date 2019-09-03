@@ -146,6 +146,7 @@ s.waitForBoot({
 								"============= SEND SECTION ".post; section.postln;
 								~currentSection = section;
 
+
 								// ici tu changes des trucs comme tu veux sur l'harmonizer en fonction de la section
 
 								/*								~harmo.free;
