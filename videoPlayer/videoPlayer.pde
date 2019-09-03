@@ -19,24 +19,28 @@ FeedbackWidget feedbackbWidget;
 //Voix grave douce; 17 min 46 secondes - 19 min 46 secondes
 
 
- //~sectionLabels = [
- //0: "LO freq - LO amp", 
- //1: "HI freq - LO amp",
- //2: "LO freq - HI amp",
- //3: "HI freq - HI amp" ];
+//~sectionLabels = [
+//0: "LO freq - LO amp", 
+//1: "HI freq - LO amp",
+//2: "LO freq - HI amp",
+//3: "HI freq - HI amp" ];
 
 
 //int[] sections = { 0, 120, 386, 604, 745, 894, 1066}; 
 
-int[] sections = { 1066, 745, 120, 386}; 
+float[] sectionStarts = { 1066, 745, 120, 386}; 
+float[] sectionEnds = { 1186, 864, 381, 418}; 
+float[] currentTimes = sectionStarts;
+boolean[] playing = { false, false, false, false}; 
 float[] sectionLikelihoods = {0, 0, 0, 0};
 
 int sectionCount = 7;
 int currentSection = -1;
 int pitchSections = 3;
+Movie[] movies;
 
 public void settings() {
-  size(800 , 300);
+  size(800, 300);
 }
 
 
@@ -44,26 +48,53 @@ void setup() {
   /* start oscP5, listening for incoming messages at port 12000 */
   oscP5 = new OscP5(this, 12000);
   oscP5.plug(this, "newSection", "/section");
+
+  // widget size
   int size = height/10;
-  
   feedbackbWidget = new FeedbackWidget(width/size + size, height - size, size, size);
 
+  movies = new Movie[4];
 
-myMovie = new Movie(this, "/Volumes/quartera/Dropbox/hammaniProject_media/video/hammani_motifsKabyles_codesSecretsFemmes.mp4");
- // myMovie = new Movie(this, "/Users/bloit/Dropbox/hammaniProject_media/video/hammani_motifsKabyles_codesSecretsFemmes.mp4");
-
-  myMovie.noLoop();
+  for (int i = 0; i<4; i++) {
+    movies[i] = new Movie(this, "/Volumes/quartera/Dropbox/hammaniProject_media/video/hammani_motifsKabyles_codesSecretsFemmes.mp4");
+    movies[i].noLoop();
+  }
 }
 
 void draw() {
   clear();
-  image(myMovie, 0, 0, width, height);
-    feedbackbWidget.update(sectionLikelihoods[0], 
+
+  for (int i = 0; i<4; i++) {
+    drawVideo(i);
+  }  
+
+
+  feedbackbWidget.update(sectionLikelihoods[0], 
     sectionLikelihoods[1], 
     sectionLikelihoods[2], 
     sectionLikelihoods[3]
     );
   feedbackbWidget.display();
+}
+
+
+void drawVideo(int i) {
+
+  currentTimes[i] = movies[i].time();
+  if (currentTimes[i] >= sectionEnds[i]) {
+    currentTimes[i] = sectionStarts[i];
+  }
+
+  if (sectionLikelihoods[i] > 0.5) {
+    if (!playing[i]) {
+      movies[i].play();
+      movies[i].jump(currentTimes[i]);
+      playing[i] = true;
+    } else {
+      movies[i].pause();
+      playing[i] = false;
+    }
+  }
 }
 
 // Called every time a new frame is available to read
@@ -74,19 +105,18 @@ void movieEvent(Movie m) {
 
 // section change
 public void newSection(int section, float value) {
-  
+
   println("section " + str(section) + "  " + str(value));
   sectionLikelihoods[section] = value;
 
-  
- //println("OSC SECTION INPUT " + str(section));
- // if (section > -1){
- //    myMovie.play();
- //   myMovie.jump(sections[section]);
- // } else {
- //   myMovie.stop();
- // }
-  
+  //println("OSC SECTION INPUT " + str(section));
+  // if (section > -1){
+  //    myMovie.play();
+  //   myMovie.jump(sections[section]);
+  // } else {
+  //   myMovie.stop();
+  // }
+
   //println("OSC INPUT " + str(pitch));
   //int sectionToPlay = int(floor(pitch * pitchSections));
   //println("section to play " + str(sectionToPlay));
