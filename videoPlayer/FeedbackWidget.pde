@@ -16,7 +16,12 @@ class FeedbackWidget {
     h = _h;
   }
   
-  void update(){
+  void update(float v0, float v1, float v2, float v3){
+    alphas[0] = int(255 * v0);
+    
+    alphas[1] = int(255 * v1);
+    alphas[2] = int(255 * v2);
+    alphas[3] = int(255 * v3);
     
     
   }

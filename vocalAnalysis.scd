@@ -65,14 +65,37 @@ s.waitForBoot({
 		section;
 	};
 
+
+
 	~sectionLabels = ["LO freq - LO amp", "HI freq - LO amp", "LO freq - HI amp", "HI freq - HI amp" ];
 
 	~sectionHistory = Array.fill(10, {|i| -1});
 
-	~pushValueAndGetMedian = {|newVal=0|
-		~sectionHistory = ~sectionHistory.shift(1).put(0, newVal);
-		~sectionHistory.median.floor;
+	// Init fifos, for holding decision history
+	~fifoSize = 50;
+	~fifos = Array.newClear(4);
+	~fifos[0] = Array.fill(~fifoSize, {|i| 0});
+	~fifos[1] = Array.fill(~fifoSize, {|i| 0});
+	~fifos[2] = Array.fill(~fifoSize, {|i| 0});
+	~fifos[3] = Array.fill(~fifoSize, {|i| 0});
+
+
+	~pushValueAndGetSumArray = {|section=0|
+		// shift fifos, push out old values
+		4.do({|i|
+			~fifos[i] = ~fifos[i].shift(1);
+		});
+
+		if(section > -1,{
+			~fifos[section].put(0,1); // store 1 in the fifo of the detected section
+		}
+		);
+
+		// return likelihoods
+		~fifos.collect({|row| row.sum / row.size})
 	};
+
+
 
 	// bus arrays, group per audio input
 	~meterBusses = Array.new;
@@ -102,8 +125,6 @@ s.waitForBoot({
 		Out.kr(voicedOut, hasFreq.lag(1));
 	}).add;
 
-
-
 	s.sync;
 
 
@@ -124,37 +145,21 @@ s.waitForBoot({
 
 						~voicedBusses[i].get({|voicedVal|
 							// pitchVal.postln;
-
+							var sectionLikelihoods;
 							section = ~decideSection.value(ampVal, pitchVal);
 
 							// filter the section with median filter
-							section = ~pushValueAndGetMedian.value(section).asInt;
+							sectionLikelihoods = ~pushValueAndGetSumArray.value(section);
+							sectionLikelihoods.postln;
 
 							// for debug
 							"------------".postln;
-							"AMP ".post; ampVal.postln;
+/*							"AMP ".post; ampVal.postln;
 							"PITCH ".post; pitchVal.postln;
-							~sectionLabels[section].postln;
-
-
-							if (section!=~currentSection, {
-
-								// Trigger a section change
-								~uiMachine.sendMsg("/section", section);
-								section.class.postln;
-								// ~uiMachine.sendMsg("/section", -1);
-								"============= SEND SECTION ".post; section.postln;
-								~currentSection = section;
-
-
-								// ici tu changes des trucs comme tu veux sur l'harmonizer en fonction de la section
-
-								/*								~harmo.free;
-								~harmo = Synth(\harmonizer);*/
-
-
+							~sectionLabels[section].postln;*/
+							sectionLikelihoods.size.do({|i|
+								~uiMachine.sendMsg("/section", i, sectionLikelihoods[i]);
 							});
-
 						});
 					});
 				};

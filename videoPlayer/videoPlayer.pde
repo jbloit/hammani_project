@@ -29,6 +29,7 @@ FeedbackWidget feedbackbWidget;
 //int[] sections = { 0, 120, 386, 604, 745, 894, 1066}; 
 
 int[] sections = { 1066, 745, 120, 386}; 
+float[] sectionLikelihoods = {0, 0, 0, 0};
 
 int sectionCount = 7;
 int currentSection = -1;
@@ -57,7 +58,11 @@ myMovie = new Movie(this, "/Volumes/quartera/Dropbox/hammaniProject_media/video/
 void draw() {
   clear();
   image(myMovie, 0, 0, width, height);
-  feedbackbWidget.update();
+    feedbackbWidget.update(sectionLikelihoods[0], 
+    sectionLikelihoods[1], 
+    sectionLikelihoods[2], 
+    sectionLikelihoods[3]
+    );
   feedbackbWidget.display();
 }
 
@@ -68,15 +73,19 @@ void movieEvent(Movie m) {
 
 
 // section change
-public void newSection(int section) {
+public void newSection(int section, float value) {
   
- println("OSC SECTION INPUT " + str(section));
-  if (section > -1){
-     myMovie.play();
-    myMovie.jump(sections[section]);
-  } else {
-    myMovie.stop();
-  }
+  println("section " + str(section) + "  " + str(value));
+  sectionLikelihoods[section] = value;
+
+  
+ //println("OSC SECTION INPUT " + str(section));
+ // if (section > -1){
+ //    myMovie.play();
+ //   myMovie.jump(sections[section]);
+ // } else {
+ //   myMovie.stop();
+ // }
   
   //println("OSC INPUT " + str(pitch));
   //int sectionToPlay = int(floor(pitch * pitchSections));
