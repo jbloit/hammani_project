@@ -39,8 +39,10 @@ int currentSection = -1;
 int pitchSections = 3;
 Movie[] movies;
 
+PVector[] movieOrigins;
+
 public void settings() {
-  size(800, 300);
+  size(800, 600);
 }
 
 
@@ -54,11 +56,19 @@ void setup() {
   feedbackbWidget = new FeedbackWidget(width/size + size, height - size, size, size);
 
   movies = new Movie[4];
-
+  movieOrigins = new PVector[4];
+  
   for (int i = 0; i<4; i++) {
     movies[i] = new Movie(this, "/Volumes/quartera/Dropbox/hammaniProject_media/video/hammani_motifsKabyles_codesSecretsFemmes.mp4");
     movies[i].noLoop();
   }
+  
+  movieOrigins[0] = new PVector(0, 0);
+  movieOrigins[1] = new PVector(width/2, 0);
+  movieOrigins[2] = new PVector(0, height/2);
+  movieOrigins[3] = new PVector(width/2, height/2);
+  
+  
 }
 
 void draw() {
@@ -80,7 +90,7 @@ void draw() {
 
 void drawVideo(int i) {
 
-  currentTimes[i] = movies[i].time();
+  
   if (currentTimes[i] >= sectionEnds[i]) {
     currentTimes[i] = sectionStarts[i];
   }
@@ -91,9 +101,15 @@ void drawVideo(int i) {
       movies[i].jump(currentTimes[i]);
       playing[i] = true;
     } else {
+      currentTimes[i] = movies[i].time();
+    }
+    
+    tint(255, sectionLikelihoods[i]*255);
+    image(movies[i], movieOrigins[i].x, movieOrigins[i].y, width/2, height/2);
+    
+  } else {
       movies[i].pause();
       playing[i] = false;
-    }
   }
 }
 
