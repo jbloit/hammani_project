@@ -53,7 +53,7 @@ void setup() {
 
   // widget size
   int size = height/10;
-  feedbackbWidget = new FeedbackWidget(width/size + size, height - size, size, size);
+  feedbackbWidget = new FeedbackWidget(width/2, height - size, size, size);
 
   movies = new Movie[4];
   movieOrigins = new PVector[4];
