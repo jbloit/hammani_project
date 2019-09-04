@@ -112,6 +112,7 @@ void drawVideo(int i) {
     
     tint(255, sectionLikelihoods[i]*255);
     image(movies[i], movieOrigins[i].x, movieOrigins[i].y, width/2, height/2);
+    movies[i].volume(sectionLikelihoods[i]);
     
   } else {
       movies[i].pause();
