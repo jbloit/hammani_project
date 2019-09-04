@@ -63,11 +63,17 @@ void setup() {
     movies[i].noLoop();
   }
   
-  movieOrigins[0] = new PVector(0, 0);
-  movieOrigins[1] = new PVector(width/2, 0);
-  movieOrigins[2] = new PVector(0, height/2);
-  movieOrigins[3] = new PVector(width/2, height/2);
+  // mosaic movies layout
+  //movieOrigins[0] = new PVector(0, 0);
+  //movieOrigins[1] = new PVector(width/2, 0);
+  //movieOrigins[2] = new PVector(0, height/2);
+  //movieOrigins[3] = new PVector(width/2, height/2);
   
+  // stack movies layout
+  movieOrigins[0] = new PVector(width/4, height/4);
+  movieOrigins[1] = new PVector(width/4, height/4);
+  movieOrigins[2] = new PVector(width/4, height/4);
+  movieOrigins[3] = new PVector(width/4, height/4);
   
 }
 
