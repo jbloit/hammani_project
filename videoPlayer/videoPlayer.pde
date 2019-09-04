@@ -30,6 +30,7 @@ FeedbackWidget feedbackbWidget;
 
 float[] sectionStarts = { 1066, 745, 120, 386}; 
 float[] sectionEnds = { 1186, 864, 381, 418}; 
+String[] sectionLabels = { "chant doux", "chant fort", "clap clap", "Shhhhhhh"}; 
 float[] currentTimes = sectionStarts;
 boolean[] playing = { false, false, false, false}; 
 float[] sectionLikelihoods = {0, 0, 0, 0};
@@ -40,6 +41,11 @@ int pitchSections = 3;
 Movie[] movies;
 
 PVector[] movieOrigins;
+
+enum Page {
+  CALIBRATION, PLAY
+};
+Page currentPage = Page.CALIBRATION;
 
 public void settings() {
   size(800, 600);
@@ -57,46 +63,90 @@ void setup() {
 
   movies = new Movie[4];
   movieOrigins = new PVector[4];
-  
+
   for (int i = 0; i<4; i++) {
     movies[i] = new Movie(this, "/Volumes/quartera/Dropbox/hammaniProject_media/video/hammani_motifsKabyles_codesSecretsFemmes.mp4");
     movies[i].noLoop();
   }
-  
+
   // mosaic movies layout
   //movieOrigins[0] = new PVector(0, 0);
   //movieOrigins[1] = new PVector(width/2, 0);
   //movieOrigins[2] = new PVector(0, height/2);
   //movieOrigins[3] = new PVector(width/2, height/2);
-  
+
   // stack movies layout
   movieOrigins[0] = new PVector(width/4, height/4);
   movieOrigins[1] = new PVector(width/4, height/4);
   movieOrigins[2] = new PVector(width/4, height/4);
   movieOrigins[3] = new PVector(width/4, height/4);
-  
 }
+
+
 
 void draw() {
   clear();
 
-  for (int i = 0; i<4; i++) {
-    drawVideo(i);
-  }  
+  if (keyPressed) {
+    if (key == 'c' || key == 'C') {
+      currentPage = Page.CALIBRATION;
+      println("CALIBRATION");
+    } else {
+      currentPage = Page.PLAY;
+      println("PLAY");
+    }
+  }
 
+  if (currentPage == Page.PLAY) {
+    for (int i = 0; i<4; i++) {
+      drawVideo(i);
+    }
+  } else {
+    reinitMovies();
+  }
+
+  if (currentPage == Page.CALIBRATION) {
+    feedbackbWidget.x = width/2;
+    feedbackbWidget.y = height/2;
+    feedbackbWidget.w = width/2;
+    feedbackbWidget.h = width/2;
+
+    textSize(32);
+    fill(100);
+    text(sectionLabels[2], 50, 32);
+    text(sectionLabels[1], 50, height - 50);
+    text(sectionLabels[0], width/2 + 50, height - 50);
+    text(sectionLabels[3], width/2 + 50, 32);
+    
+  } else {
+    int size = height/10;
+    feedbackbWidget.x = width/2;
+    feedbackbWidget.y = height - size;
+    feedbackbWidget.w = size;
+    feedbackbWidget.h = size;
+  }
 
   feedbackbWidget.update(sectionLikelihoods[0], 
     sectionLikelihoods[1], 
     sectionLikelihoods[2], 
     sectionLikelihoods[3]
     );
+
   feedbackbWidget.display();
 }
 
+void reinitMovies() {
+  currentTimes = sectionStarts;
+  for (int i = 0; i<4; i++) {
+    movies[i].jump(currentTimes[i]);
+    movies[i].stop();
+    playing[i] = false;
+  }
+}
 
 void drawVideo(int i) {
 
-  
+
   if (currentTimes[i] >= sectionEnds[i]) {
     currentTimes[i] = sectionStarts[i];
   }
@@ -109,14 +159,13 @@ void drawVideo(int i) {
     } else {
       currentTimes[i] = movies[i].time();
     }
-    
+
     tint(255, sectionLikelihoods[i]*255);
     image(movies[i], movieOrigins[i].x, movieOrigins[i].y, width/2, height/2);
     movies[i].volume(sectionLikelihoods[i]);
-    
   } else {
-      movies[i].pause();
-      playing[i] = false;
+    movies[i].pause();
+    playing[i] = false;
   }
 }
 
@@ -125,30 +174,8 @@ void movieEvent(Movie m) {
   m.read();
 }
 
-
 // section change
 public void newSection(int section, float value) {
 
-  println("section " + str(section) + "  " + str(value));
   sectionLikelihoods[section] = value;
-
-  //println("OSC SECTION INPUT " + str(section));
-  // if (section > -1){
-  //    myMovie.play();
-  //   myMovie.jump(sections[section]);
-  // } else {
-  //   myMovie.stop();
-  // }
-
-  //println("OSC INPUT " + str(pitch));
-  //int sectionToPlay = int(floor(pitch * pitchSections));
-  //println("section to play " + str(sectionToPlay));
-  //if (sectionToPlay != currentSection ){
-  //   if (sectionToPlay < (sectionCount -1)){
-  //      println("--------------------------- change section to play " + str(sectionToPlay));
-  //      myMovie.play();
-  //      myMovie.jump(sections[sectionToPlay]);
-  //      currentSection = sectionToPlay;
-  //   }
-  //}
 }
