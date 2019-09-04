@@ -95,7 +95,7 @@ void drawVideo(int i) {
     currentTimes[i] = sectionStarts[i];
   }
 
-  if (sectionLikelihoods[i] > 0.5) {
+  if (sectionLikelihoods[i] > 0.1) {
     if (!playing[i]) {
       movies[i].play();
       movies[i].jump(currentTimes[i]);
