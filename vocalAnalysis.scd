@@ -37,29 +37,32 @@ s.waitForBoot({
 
 	~currentSection = -1;
 	~pitchTresh = 0.25; // considered "Hi pitch" above this thresh.
-	~ampTresh = 0.04; // considered "Hi amp" above this thresh.
+	~ampTresh = 0.4; // considered "Hi amp" above this thresh.
+	~blowAmp = 0.2; //
+	~voicedThresh = 0.8;
 
 	// function to pick a video section index based on audio analysis
-	~decideSection = {|amp=0, freq=0, hasFreq=0|
+	~decideSection = {|amp=0, freq=0, hasFreq=0, tempo=0|
 		var section = -1; // -1 represents the silent category, ie no input from user.
 		if (amp>~minAmp, {
-			if (amp<~ampTresh,{
-				if (freq < ~pitchTresh, {
-					// low freq, low amp
+
+			if (hasFreq > ~voicedThresh, {
+				if (amp<~ampTresh,{
+					// voiced, low amp
 					section = 0;
 				}, {
-					//hi freq, low amp
+					// voiced, hi amp
 					section = 1;
 				});
-			},
-			if (freq < ~pitchTresh, {
-				// low freq, hi amp
-				section = 2;
 			}, {
-				// hi freq, hi amp
-				section = 3;
+				if (amp<~blowAmp,{
+					// clapping
+					section = 2;
+				}, {
+					// blowing
+					section = 3;
+				});
 			});
-			);
 		},
 		);
 		section;
@@ -96,36 +99,41 @@ s.waitForBoot({
 	};
 
 
-
 	// bus arrays, group per audio input
 	~meterBusses = Array.new;
 	~pitchBusses = Array.new;
 	~voicedBusses = Array.new;
+	~beatBusses = Array.new;
 
 	~inputCount.do{|i|
 		~meterBusses = ~meterBusses.add(Bus.control(s, 1));
 		~pitchBusses = ~pitchBusses.add(Bus.control(s, 1));
 		~voicedBusses = ~voicedBusses.add(Bus.control(s, 1));
+		~beatBusses = ~beatBusses.add(Bus.control(s, 1));
 	};
 
 	// Analyze audio features and copy them in control busses
 	SynthDef(\audioAnalyzer, {
-		|in=0, meterOut=0, pitchOut=0, voicedOut=0|
+		|in=0, meterOut=0, pitchOut=0, voicedOut=0, beatOut=0|
 
-		var input, amp, pitch, hasFreq;
+		var input, amp, pitch, hasFreq, onsets, chain;
 		input = In.ar(in,1);
 		amp = Amplitude.kr(input, releaseTime: 5);
 		# pitch, hasFreq = Pitch.kr(input, minFreq:~minFreq, maxFreq:~maxFreq, downSample:2, median:10);
-
 		pitch = pitch.lag(10);
 
-		Out.kr(meterOut, amp);
+		chain = FFT(LocalBuf(512), input);
+		onsets = Onsets.kr(chain, 0.2, \rcomplex);
+
+		Out.kr(meterOut, amp.lag(10));
 		Out.kr(pitchOut, (pitch * hasFreq / ~maxFreq).lag(1));
-		// Out.kr(voicedOut, (amp *10* hasFreq.linlin(0, 1, -1, 1)).lag(1));
-		Out.kr(voicedOut, hasFreq.lag(1));
+		Out.kr(voicedOut, hasFreq.lag(2));
+		Out.kr(beatOut, Timer.kr(onsets) );
 	}).add;
 
 	s.sync;
+
+
 
 
 	// ~harmo = Synth(\harmonizer);
@@ -143,22 +151,28 @@ s.waitForBoot({
 
 					~meterBusses[i].get({|ampVal|
 
-						~voicedBusses[i].get({|voicedVal|
-							// pitchVal.postln;
-							var sectionLikelihoods;
-							section = ~decideSection.value(ampVal, pitchVal);
+						~beatBusses[i].get({|beatVal|
 
-							// filter the section with median filter
-							sectionLikelihoods = ~pushValueAndGetSumArray.value(section);
-							sectionLikelihoods.postln;
+							~voicedBusses[i].get({|voicedVal|
+								// pitchVal.postln;
+								var sectionLikelihoods;
+								section = ~decideSection.value(ampVal, pitchVal, voicedVal, beatVal);
 
-							// for debug
-							"------------".postln;
-/*							"AMP ".post; ampVal.postln;
-							"PITCH ".post; pitchVal.postln;
-							~sectionLabels[section].postln;*/
-							sectionLikelihoods.size.do({|i|
-								~uiMachine.sendMsg("/section", i, sectionLikelihoods[i]);
+								// filter the section with median filter
+								sectionLikelihoods = ~pushValueAndGetSumArray.value(section);
+								sectionLikelihoods.postln;
+
+								// for debug
+								"------------".postln;
+								"AMP ".post; ampVal.postln;
+								"PITCH ".post; pitchVal.postln;
+								"VOICED ".post; voicedVal.postln;
+								"TEMPO ".post; beatVal.postln;
+								~sectionLabels[section].postln;
+
+								sectionLikelihoods.size.do({|i|
+									~uiMachine.sendMsg("/section", i, sectionLikelihoods[i]);
+								});
 							});
 						});
 					});
@@ -171,7 +185,7 @@ s.waitForBoot({
 		};
 	);
 
-	~player1 = Synth.after(~player, \audioAnalyzer, [\in, ~inputBus.index, \meterOut, ~meterBusses[0], \voicedOut, ~voicedBusses[0], \pitchOut, ~pitchBusses[0] ] );
+	~player1 = Synth.after(~player, \audioAnalyzer, [\in, ~inputBus.index, \meterOut, ~meterBusses[0], \voicedOut, ~voicedBusses[0], \pitchOut, ~pitchBusses[0], \beatOut, ~beatBusses[0] ] );
 	// ~player2 = Synth(\audioAnalyzer, [\in, 1, \meterOut, ~meterBusses[1], \voicedOut, ~voicedBusses[1], \pitchOut, ~pitchBusses[1] ] );
 }
 ;
