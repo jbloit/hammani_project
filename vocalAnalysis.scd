@@ -133,9 +133,6 @@ s.waitForBoot({
 
 	s.sync;
 
-
-
-
 	// ~harmo = Synth(\harmonizer);
 
 	// Poll the value of a signal periodically, and send over the value via OSC.
@@ -171,7 +168,7 @@ s.waitForBoot({
 								~sectionLabels[section].postln;
 
 								sectionLikelihoods.size.do({|i|
-									~uiMachine.sendMsg("/section", i, sectionLikelihoods[i]);
+									~uiMachine.sendMsg("/likelihood", i, sectionLikelihoods[i]);
 								});
 							});
 						});

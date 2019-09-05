@@ -22,12 +22,7 @@ class FeedbackWidget {
     alphas[1] = int(255 * v1);
     alphas[2] = int(255 * v2);
     alphas[3] = int(255 * v3);
-    
-    
   }
-  
-  
-  
   
   void display(){
     ellipseMode(CENTER);
@@ -46,9 +41,6 @@ class FeedbackWidget {
     
     fill(c3, alphas[3]);
     arc(x, y, w, h, 3*PI/2, PI*2);
-    
-
-
   }
   
 }
