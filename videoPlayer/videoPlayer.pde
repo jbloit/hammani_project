@@ -8,18 +8,24 @@ FeedbackWidget feedbackbWidget;
 
 float[] sectionStarts = { 1066, 745, 120, 386}; 
 float[] sectionEnds = { 1186, 864, 381, 418}; 
-String[] sectionLabels = { "Soft singing", "Louder singing", "Clap", "Shhhhhhh"}; 
+String[] sectionLabels = { "Soft singing", "Louder singing", "Clap", "Shhh (loud)"}; 
 float[] currentTimes = sectionStarts;
 boolean[] playing = { false, false, false, false}; 
 float[] sectionLikelihoods = {0, 0, 0, 0};
-
 int sectionCount = 7;
 int currentSection = -1;
 int pitchSections = 3;
 Movie[] movies;
-
 PVector[] movieOrigins;
 
+// local copy of the thresholds used by the audio analysis
+float ampThreshold = 0.5;
+float blowThreshold = 0.5;
+
+// super collider server address
+NetAddress scHost;
+
+// Display modes
 enum Page {
   PRACTICE, PLAY
 };
@@ -31,9 +37,15 @@ public void settings() {
 
 
 void setup() {
+
+  scHost = new NetAddress("127.0.0.1", 57120);
+
   /* start oscP5, listening for incoming messages at port 12000 */
   oscP5 = new OscP5(this, 12000);
   oscP5.plug(this, "updateLikelihood", "/likelihood");
+  oscP5.plug(this, "updateAmpThreshold", "/ampThresh");
+  oscP5.plug(this, "updateBlowThreshold", "/blowThresh");
+
 
   // widget size
   int size = height/10;
@@ -43,7 +55,7 @@ void setup() {
   movieOrigins = new PVector[4];
 
   for (int i = 0; i<4; i++) {
-   movies[i] = new Movie(this, "video.mp4");
+    movies[i] = new Movie(this, "video.mp4");
     movies[i].noLoop();
   }
 
@@ -60,6 +72,29 @@ void setup() {
   movieOrigins[3] = new PVector(width/4, height/4);
 }
 
+void mouseDragged() {
+  if (currentPage == Page.PRACTICE) {
+
+    if (mouseY > height / 2) {
+      ampThreshold = float(mouseX) / width;
+      println("AMP THRESH " + str(ampThreshold));
+    } else {
+      blowThreshold = float(mouseX) / width;
+      println("BLOW THRESH " + str(blowThreshold));
+    }
+
+    updateSuperColliderThresholds();
+  }
+}
+
+void updateSuperColliderThresholds() {
+  /* in the following different ways of creating osc messages are shown by example */
+  OscMessage myMessage = new OscMessage("/updateThresholds");
+  myMessage.add(ampThreshold); 
+  myMessage.add(blowThreshold); 
+  /* send the message */
+  oscP5.send(myMessage, scHost);
+}
 
 
 void draw() {
@@ -67,17 +102,15 @@ void draw() {
 
   if (keyPressed) {
     if (key == ' ') {
-      if (currentPage == Page.PRACTICE){
+      if (currentPage == Page.PRACTICE) {
         currentPage = Page.PLAY;
         println("PLAY");
       } else {
-      currentPage = Page.PRACTICE;
-      println("PRACTICE");
+        currentPage = Page.PRACTICE;
+        println("PRACTICE");
       }
-      
     } else {
       currentPage = Page.PLAY;
-      
     }
   }
 
@@ -89,19 +122,32 @@ void draw() {
     reinitMovies();
   }
 
+
+
   if (currentPage == Page.PRACTICE) {
+
+    // draw decision thresholds as vertical lines
+    textSize(16);
+    fill(60);
+    stroke(30);
+    line(ampThreshold * width, height/2, ampThreshold * width, height);
+    text(str(ampThreshold), ampThreshold * width, height*3/4);
+    line(blowThreshold * width, 0, blowThreshold * width, height/2);
+    text(str(blowThreshold), blowThreshold * width, height/4);
+
+    // draw large feedback widget
     feedbackbWidget.x = width/2;
     feedbackbWidget.y = height/2;
-    feedbackbWidget.w = width/2;
-    feedbackbWidget.h = width/2;
+    feedbackbWidget.w = width/3;
+    feedbackbWidget.h = width/3;
 
+    // draw audio category labels
     textSize(32);
     fill(100);
     text(sectionLabels[2], 50, 32);
     text(sectionLabels[1], 50, height - 50);
     text(sectionLabels[0], width/2 + 50, height - 50);
     text(sectionLabels[3], width/2 + 50, 32);
-    
   } else {
     int size = height/10;
     feedbackbWidget.x = width/2;
@@ -158,8 +204,22 @@ void movieEvent(Movie m) {
   m.read();
 }
 
+
+/////////////// OSC CALLBACKS
+
 // update section likelihood value
 public void updateLikelihood(int section, float value) {
-
   sectionLikelihoods[section] = value;
+}
+
+// update section likelihood value
+public void updateAmpThreshold(float value) {
+  //println("osc in AMP thresh " + str(value));
+  ampThreshold = value;
+}
+
+// update section likelihood value
+public void updateBlowThreshold(float value) {
+  //println("osc in BLOW thresh " + str(value));
+  blowThreshold = value;
 }

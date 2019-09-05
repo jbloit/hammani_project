@@ -38,11 +38,11 @@ s.waitForBoot({
 	~currentSection = -1;
 	~pitchTresh = 0.25; // considered "Hi pitch" above this thresh.
 	~ampTresh = 0.4; // considered "Hi amp" above this thresh.
-	~blowAmp = 0.2; // noise considered to be blowing (as opposed to clapping) above this thresh.
+	~blowThresh = 0.2; // noise considered to be blowing (as opposed to clapping) above this thresh.
 	~voicedThresh = 0.8; // considered singing above this thresh
 
 	// function to pick a video section index based on audio analysis
-	~decideSection = {|amp=0, freq=0, hasFreq=0, tempo=0|
+	~decideSection = {|amp=0, freq=0, hasFreq=0|
 		var section = -1; // -1 represents the silent category, ie no input from user.
 		if (amp>~minAmp, {
 
@@ -55,7 +55,7 @@ s.waitForBoot({
 					section = 1;
 				});
 			}, {
-				if (amp<~blowAmp,{
+				if (amp<~blowThresh,{
 					// clapping
 					section = 2;
 				}, {
@@ -67,10 +67,6 @@ s.waitForBoot({
 		);
 		section;
 	};
-
-
-
-	~sectionLabels = ["LO freq - LO amp", "HI freq - LO amp", "LO freq - HI amp", "HI freq - HI amp" ];
 
 	~sectionHistory = Array.fill(10, {|i| -1});
 
@@ -98,23 +94,20 @@ s.waitForBoot({
 		~fifos.collect({|row| row.sum / row.size})
 	};
 
-
 	// bus arrays, group per audio input
 	~meterBusses = Array.new;
 	~pitchBusses = Array.new;
 	~voicedBusses = Array.new;
-	~beatBusses = Array.new;
 
 	~inputCount.do{|i|
 		~meterBusses = ~meterBusses.add(Bus.control(s, 1));
 		~pitchBusses = ~pitchBusses.add(Bus.control(s, 1));
 		~voicedBusses = ~voicedBusses.add(Bus.control(s, 1));
-		~beatBusses = ~beatBusses.add(Bus.control(s, 1));
 	};
 
 	// Analyze audio features and copy them in control busses
 	SynthDef(\audioAnalyzer, {
-		|in=0, meterOut=0, pitchOut=0, voicedOut=0, beatOut=0|
+		|in=0, meterOut=0, pitchOut=0, voicedOut=0|
 
 		var input, amp, pitch, hasFreq, onsets, chain;
 		input = In.ar(in,1);
@@ -122,13 +115,9 @@ s.waitForBoot({
 		# pitch, hasFreq = Pitch.kr(input, minFreq:~minFreq, maxFreq:~maxFreq, downSample:2, median:10);
 		pitch = pitch.lag(10);
 
-		chain = FFT(LocalBuf(512), input);
-		onsets = Onsets.kr(chain, 0.2, \rcomplex);
-
 		Out.kr(meterOut, amp.lag(10));
 		Out.kr(pitchOut, (pitch * hasFreq / ~maxFreq).lag(1));
 		Out.kr(voicedOut, hasFreq.lag(2));
-		Out.kr(beatOut, Timer.kr(onsets) );
 	}).add;
 
 	s.sync;
@@ -148,29 +137,34 @@ s.waitForBoot({
 
 					~meterBusses[i].get({|ampVal|
 
-						~beatBusses[i].get({|beatVal|
+						~voicedBusses[i].get({|voicedVal|
+							// pitchVal.postln;
+							var sectionLikelihoods;
+							section = ~decideSection.value(ampVal, pitchVal, voicedVal);
+							section.postln;
+							~ampTresh.postln;
+							~blowThresh.postln;
 
-							~voicedBusses[i].get({|voicedVal|
-								// pitchVal.postln;
-								var sectionLikelihoods;
-								section = ~decideSection.value(ampVal, pitchVal, voicedVal, beatVal);
+							// filter the section with median filter
+							sectionLikelihoods = ~pushValueAndGetSumArray.value(section);
 
-								// filter the section with median filter
-								sectionLikelihoods = ~pushValueAndGetSumArray.value(section);
-								sectionLikelihoods.postln;
+							// Debug
+							"------------".postln;
+							sectionLikelihoods.postln;
+							/*
+							"AMP ".post; ampVal.postln;
+							"PITCH ".post; pitchVal.postln;
+							"VOICED ".post; voicedVal.postln;
+							*/
 
-								// for debug
-								"------------".postln;
-								"AMP ".post; ampVal.postln;
-								"PITCH ".post; pitchVal.postln;
-								"VOICED ".post; voicedVal.postln;
-								"TEMPO ".post; beatVal.postln;
-								~sectionLabels[section].postln;
-
-								sectionLikelihoods.size.do({|i|
-									~uiMachine.sendMsg("/likelihood", i, sectionLikelihoods[i]);
-								});
+							sectionLikelihoods.size.do({|i|
+								~uiMachine.sendMsg("/likelihood", i, sectionLikelihoods[i]);
 							});
+
+							// update Processing with the threshold values used for detection, so that there
+							// can be a visual feedback during the calibration phase.
+							~uiMachine.sendMsg("/ampThresh", ~ampTresh);
+							~uiMachine.sendMsg("/blowThresh", ~blowThresh);
 						});
 					});
 				};
@@ -182,8 +176,17 @@ s.waitForBoot({
 		};
 	);
 
-	~player1 = Synth.after(~player, \audioAnalyzer, [\in, ~inputBus.index, \meterOut, ~meterBusses[0], \voicedOut, ~voicedBusses[0], \pitchOut, ~pitchBusses[0], \beatOut, ~beatBusses[0] ] );
-	// ~player2 = Synth(\audioAnalyzer, [\in, 1, \meterOut, ~meterBusses[1], \voicedOut, ~voicedBusses[1], \pitchOut, ~pitchBusses[1] ] );
+	~player1 = Synth.after(~player, \audioAnalyzer, [\in, ~inputBus.index, \meterOut, ~meterBusses[0], \voicedOut, ~voicedBusses[0], \pitchOut, ~pitchBusses[0] ] );
+
+
+	OSCdef.new(\updathresholds, {|msg|
+		"OSC IN".postln;
+		msg.postln;
+		~ampTresh = msg[1];
+		~blowThresh = msg[2];
+
+	}, "/updateThresholds");
+
 }
 ;
 );
