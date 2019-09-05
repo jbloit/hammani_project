@@ -38,8 +38,8 @@ s.waitForBoot({
 	~currentSection = -1;
 	~pitchTresh = 0.25; // considered "Hi pitch" above this thresh.
 	~ampTresh = 0.4; // considered "Hi amp" above this thresh.
-	~blowAmp = 0.2; //
-	~voicedThresh = 0.8;
+	~blowAmp = 0.2; // noise considered to be blowing (as opposed to clapping) above this thresh.
+	~voicedThresh = 0.8; // considered singing above this thresh
 
 	// function to pick a video section index based on audio analysis
 	~decideSection = {|amp=0, freq=0, hasFreq=0, tempo=0|
