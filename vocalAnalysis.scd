@@ -141,9 +141,6 @@ s.waitForBoot({
 							// pitchVal.postln;
 							var sectionLikelihoods;
 							section = ~decideSection.value(ampVal, pitchVal, voicedVal);
-							section.postln;
-							~ampTresh.postln;
-							~blowThresh.postln;
 
 							// filter the section with median filter
 							sectionLikelihoods = ~pushValueAndGetSumArray.value(section);
