@@ -4,11 +4,14 @@ Run a pitch analysis periodically and send values over OSC
 
 // s.options.inDevice_("UMC202HD 192k");
 // s.options.outDevice_("UMC202HD 192k");
-s.options.inDevice_("Fireface UC Mac (23669936)");
-s.options.outDevice_("Fireface UC Mac (23669936)");
+// s.options.inDevice_("Fireface UC Mac (23669936)");
+// s.options.outDevice_("Fireface UC Mac (23669936)");
 
 s.waitForBoot({
 	//////////////////////////////////// synth def and busses
+
+	currentEnvironment.clear;
+	"harmonize.scd".loadRelative(true, {"loaded harmonizer".postln});
 
 	Buffer.freeAll;
 	Bus.clear;
@@ -16,11 +19,10 @@ s.waitForBoot({
 	// input
 
 	~inputBus = Bus.audio(s, 1); // audio bus to get input from, either soundin or sfplayer.
-	~sfBuffer=Buffer.cueSoundFile(s,"/Users/bloit/Dropbox/hammaniProject_media/audio/chant_julien.wav",0, 1);
 	SynthDef(\diskin,{|out=0|
 		var sig = SoundIn.ar(0);
 		Out.ar(out, sig);
-		Out.ar(0, sig);
+
 	};
 	).add;
 	s.sync;
@@ -30,7 +32,6 @@ s.waitForBoot({
 	~inputCount = 1; // number of mics
 	~oscSendPeriod = 0.1; //sec
 
-	// TODO: calibrate this in the app:
 	~minFreq = 90;
 	~maxFreq = 800;
 
@@ -39,6 +40,10 @@ s.waitForBoot({
 	~ampTresh_0 = 0.5; // considered "Hi amp" above this thresh.
 	~ampTresh_1 = 0.5; // considered "Hi amp" above this thresh.
 	~voicedThresh = 0.8; // considered singing above this thresh
+
+	~selectedCategory = 0;
+	~harmonizer = Synth(\pitchFollow1, [\which, ~selectedCategory]);
+
 
 	// function to pick a video section index based on audio analysis
 	~decideSection = {|amp=0, freq=0, hasFreq=0|
@@ -144,9 +149,13 @@ s.waitForBoot({
 							// filter the section with median filter
 							sectionLikelihoods = ~pushValueAndGetSumArray.value(section);
 
+							~selectedCategory = sectionLikelihoods.maxIndex;
+							~harmonizer.set(\which, ~selectedCategory);
+
 							// Debug
-							// "------------".postln;
-							// sectionLikelihoods.postln;
+							"------------".postln;
+							sectionLikelihoods.postln;
+							postf("Category: %\n", ~selectedCategory);
 
 /*							"AMP ".post; ampVal.postln;
 							"PITCH ".post; pitchVal.postln;
