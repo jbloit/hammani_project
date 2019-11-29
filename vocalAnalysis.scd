@@ -146,12 +146,12 @@ s.waitForBoot({
 							sectionLikelihoods = ~pushValueAndGetSumArray.value(section);
 
 							// Debug
-/*							"------------".postln;
-							sectionLikelihoods.postln;*/
+							"------------".postln;
+							sectionLikelihoods.postln;
 
-							"AMP ".post; ampVal.postln;
+/*							"AMP ".post; ampVal.postln;
 							"PITCH ".post; pitchVal.postln;
-							"VOICED ".post; voicedVal.postln;
+							"VOICED ".post; voicedVal.postln;*/
 
 
 							sectionLikelihoods.size.do({|i|
@@ -161,7 +161,7 @@ s.waitForBoot({
 							// update Processing with the threshold values used for detection, so that there
 							// can be a visual feedback during the calibration phase.
 							~uiMachine.sendMsg("/ampThresh", ~ampTresh);
-							~uiMachine.sendMsg("/blowThresh", ~blowThresh);
+							~uiMachine.sendMsg("/voicedThresh", ~voicedThresh);
 						});
 					});
 				};
@@ -180,7 +180,7 @@ s.waitForBoot({
 		"OSC IN".postln;
 		msg.postln;
 		~ampTresh = msg[1];
-		~blowThresh = msg[2];
+		~voicedThresh = msg[2];
 
 	}, "/updateThresholds");
 

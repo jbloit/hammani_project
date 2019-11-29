@@ -20,7 +20,7 @@ PVector[] movieOrigins;
 
 // local copy of the thresholds used by the audio analysis
 float ampThreshold = 0.5;
-float blowThreshold = 0.5;
+float voicedThreshold = 0.5;
 
 // super collider server address
 NetAddress scHost;
@@ -44,7 +44,7 @@ void setup() {
   oscP5 = new OscP5(this, 12000);
   oscP5.plug(this, "updateLikelihood", "/likelihood");
   oscP5.plug(this, "updateAmpThreshold", "/ampThresh");
-  oscP5.plug(this, "updateBlowThreshold", "/blowThresh");
+  oscP5.plug(this, "updateVoicedThreshold", "/voicedThresh");
 
 
   // widget size
@@ -79,8 +79,8 @@ void mouseDragged() {
       ampThreshold = float(mouseX) / width;
       println("AMP THRESH " + str(ampThreshold));
     } else {
-      blowThreshold = float(mouseX) / width;
-      println("BLOW THRESH " + str(blowThreshold));
+      voicedThreshold = float(mouseX) / width;
+      println("BLOW THRESH " + str(voicedThreshold));
     }
 
     updateSuperColliderThresholds();
@@ -91,7 +91,7 @@ void updateSuperColliderThresholds() {
   /* in the following different ways of creating osc messages are shown by example */
   OscMessage myMessage = new OscMessage("/updateThresholds");
   myMessage.add(ampThreshold); 
-  myMessage.add(blowThreshold); 
+  myMessage.add(voicedThreshold); 
   /* send the message */
   oscP5.send(myMessage, scHost);
 }
@@ -132,8 +132,8 @@ void draw() {
     stroke(30);
     line(ampThreshold * width, height/2, ampThreshold * width, height);
     text(str(ampThreshold), ampThreshold * width, height*3/4);
-    line(blowThreshold * width, 0, blowThreshold * width, height/2);
-    text(str(blowThreshold), blowThreshold * width, height/4);
+    line(voicedThreshold * width, 0, voicedThreshold * width, height/2);
+    text(str(voicedThreshold), voicedThreshold * width, height/4);
 
     // draw large feedback widget
     feedbackbWidget.x = width/2;
@@ -145,8 +145,8 @@ void draw() {
     textSize(32);
     fill(100);
     text(sectionLabels[2], 50, 32);
-    text(sectionLabels[1], 50, height - 50);
-    text(sectionLabels[0], width/2 + 50, height - 50);
+    text(sectionLabels[0], 50, height - 50);
+    text(sectionLabels[1], width/2 + 50, height - 50);
     text(sectionLabels[3], width/2 + 50, 32);
   } else {
     int size = height/10;
@@ -156,8 +156,8 @@ void draw() {
     feedbackbWidget.h = size;
   }
 
-  feedbackbWidget.update(sectionLikelihoods[0], 
-    sectionLikelihoods[1], 
+  feedbackbWidget.update(sectionLikelihoods[1], 
+    sectionLikelihoods[0], 
     sectionLikelihoods[2], 
     sectionLikelihoods[3]
     );
@@ -219,7 +219,7 @@ public void updateAmpThreshold(float value) {
 }
 
 // update section likelihood value
-public void updateBlowThreshold(float value) {
-  //println("osc in BLOW thresh " + str(value));
-  blowThreshold = value;
+public void updateVoicedThreshold(float value) {
+  //println("osc in VOICED thresh " + str(value));
+  voicedThreshold = value;
 }
