@@ -4,8 +4,8 @@ Run a pitch analysis periodically and send values over OSC
 
 // s.options.inDevice_("UMC202HD 192k");
 // s.options.outDevice_("UMC202HD 192k");
-
-
+s.options.inDevice_("Fireface UC Mac (23669936)");
+s.options.outDevice_("Fireface UC Mac (23669936)");
 
 s.waitForBoot({
 	//////////////////////////////////// synth def and busses
@@ -33,8 +33,8 @@ s.waitForBoot({
 	// TODO: calibrate this in the app:
 	~minFreq = 90;
 	~maxFreq = 800;
-	~minAmp = 0.002; // amplitude threshold. under that, we consider the input as silence.
 
+	~minAmp = 0.02; // amplitude threshold. under that, we consider the input as silence.
 	~currentSection = -1;
 	~pitchTresh = 0.25; // considered "Hi pitch" above this thresh.
 	~ampTresh = 0.4; // considered "Hi amp" above this thresh.
@@ -55,11 +55,11 @@ s.waitForBoot({
 					section = 1;
 				});
 			}, {
-				if (amp<~blowThresh,{
-					// clapping
+				if (amp<~ampTresh,{
+					// soft noise
 					section = 2;
 				}, {
-					// blowing
+					// loud noise
 					section = 3;
 				});
 			});
@@ -113,9 +113,9 @@ s.waitForBoot({
 		input = In.ar(in,1);
 		amp = Amplitude.kr(input, releaseTime: 5);
 		# pitch, hasFreq = Pitch.kr(input, minFreq:~minFreq, maxFreq:~maxFreq, downSample:2, median:10);
-		pitch = pitch.lag(10);
+		pitch = pitch.lag(5);
 
-		Out.kr(meterOut, amp.lag(10));
+		Out.kr(meterOut, amp.lag(5));
 		Out.kr(pitchOut, (pitch * hasFreq / ~maxFreq).lag(1));
 		Out.kr(voicedOut, hasFreq.lag(2));
 	}).add;
@@ -146,13 +146,13 @@ s.waitForBoot({
 							sectionLikelihoods = ~pushValueAndGetSumArray.value(section);
 
 							// Debug
-							"------------".postln;
-							sectionLikelihoods.postln;
-							/*
+/*							"------------".postln;
+							sectionLikelihoods.postln;*/
+
 							"AMP ".post; ampVal.postln;
 							"PITCH ".post; pitchVal.postln;
 							"VOICED ".post; voicedVal.postln;
-							*/
+
 
 							sectionLikelihoods.size.do({|i|
 								~uiMachine.sendMsg("/likelihood", i, sectionLikelihoods[i]);
@@ -184,6 +184,17 @@ s.waitForBoot({
 
 	}, "/updateThresholds");
 
+	OSCdef.new(\selectedCategory, {|msg|
+		var category;
+		"OSC IN".postln;
+		msg.postln;
+		category = msg[1];
+
+
+	}, "/updateThresholds");
+
+
+	~changeAudioPreset = {|index=0|};
 }
 ;
 );

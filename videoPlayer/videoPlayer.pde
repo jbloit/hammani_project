@@ -8,7 +8,7 @@ FeedbackWidget feedbackbWidget;
 
 float[] sectionStarts = { 1066, 745, 120, 386}; 
 float[] sectionEnds = { 1186, 864, 381, 418}; 
-String[] sectionLabels = { "Soft singing", "Louder singing", "Clap", "Shhh (loud)"}; 
+String[] sectionLabels = { "Soft singing", "Louder singing", "Soft noise", "Loud noise"}; 
 float[] currentTimes = sectionStarts;
 boolean[] playing = { false, false, false, false}; 
 float[] sectionLikelihoods = {0, 0, 0, 0};
