@@ -36,9 +36,8 @@ s.waitForBoot({
 
 	~minAmp = 0.02; // amplitude threshold. under that, we consider the input as silence.
 	~currentSection = -1;
-	~pitchTresh = 0.25; // considered "Hi pitch" above this thresh.
-	~ampTresh = 0.4; // considered "Hi amp" above this thresh.
-	~blowThresh = 0.2; // noise considered to be blowing (as opposed to clapping) above this thresh.
+	~ampTresh_0 = 0.5; // considered "Hi amp" above this thresh.
+	~ampTresh_1 = 0.5; // considered "Hi amp" above this thresh.
 	~voicedThresh = 0.8; // considered singing above this thresh
 
 	// function to pick a video section index based on audio analysis
@@ -47,7 +46,7 @@ s.waitForBoot({
 		if (amp>~minAmp, {
 
 			if (hasFreq > ~voicedThresh, {
-				if (amp<~ampTresh,{
+				if (amp<~ampTresh_0,{
 					// voiced, low amp
 					section = 0;
 				}, {
@@ -55,7 +54,7 @@ s.waitForBoot({
 					section = 1;
 				});
 			}, {
-				if (amp<~ampTresh,{
+				if (amp<~ampTresh_1,{
 					// soft noise
 					section = 2;
 				}, {
@@ -146,8 +145,8 @@ s.waitForBoot({
 							sectionLikelihoods = ~pushValueAndGetSumArray.value(section);
 
 							// Debug
-							"------------".postln;
-							sectionLikelihoods.postln;
+							// "------------".postln;
+							// sectionLikelihoods.postln;
 
 /*							"AMP ".post; ampVal.postln;
 							"PITCH ".post; pitchVal.postln;
@@ -160,8 +159,8 @@ s.waitForBoot({
 
 							// update Processing with the threshold values used for detection, so that there
 							// can be a visual feedback during the calibration phase.
-							~uiMachine.sendMsg("/ampThresh", ~ampTresh);
-							~uiMachine.sendMsg("/voicedThresh", ~voicedThresh);
+							~uiMachine.sendMsg("/ampThresh_0", ~ampTresh_0);
+							~uiMachine.sendMsg("/ampThresh_1", ~ampTresh_1);
 						});
 					});
 				};
@@ -179,8 +178,8 @@ s.waitForBoot({
 	OSCdef.new(\updathresholds, {|msg|
 		"OSC IN".postln;
 		msg.postln;
-		~ampTresh = msg[1];
-		~voicedThresh = msg[2];
+		~ampTresh_0 = msg[1];
+		~ampTresh_1 = msg[2];
 
 	}, "/updateThresholds");
 
@@ -191,7 +190,7 @@ s.waitForBoot({
 		category = msg[1];
 
 
-	}, "/updateThresholds");
+	}, "/\selectedCategory");
 
 
 	~changeAudioPreset = {|index=0|};
