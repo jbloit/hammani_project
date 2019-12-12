@@ -134,12 +134,7 @@ SynthDef.new("pitchFollow1",{ arg which=0;
 }).add;
 )
 
-Buffer.freeAll;
 
-
-~sound = Synth.new("pitchFollow1");
-~sound.set(\which,2)
-~sound.free;
 
 
 //// test ///
