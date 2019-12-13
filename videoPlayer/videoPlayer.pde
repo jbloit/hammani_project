@@ -6,8 +6,14 @@ OscP5 oscP5;
 Movie myMovie;
 FeedbackWidget feedbackbWidget;
 
-float[] sectionStarts = { 1066, 745, 120, 386}; 
-float[] sectionEnds = { 1186, 864, 381, 418}; 
+// These are the 4 sections START times, in seconds.
+// Edit to your needs, but make sure to keep the values within the bounds of your video duration.
+float[] sectionStarts = { 0, 15, 30, 45}; 
+
+// These are the 4 sections END times, in seconds.
+// Edit to your needs, but make sure to keep the values within the bounds of your video duration.
+float[] sectionEnds = { 15, 30, 45, 53}; 
+
 String[] sectionLabels = { "Soft singing", "Louder singing", "Soft noise", "Loud noise"}; 
 float[] currentTimes = sectionStarts;
 boolean[] playing = { false, false, false, false}; 
@@ -113,7 +119,7 @@ void draw() {
         println("PRACTICE");
       }
     } else {
-      currentPage = Page.PLAY;
+      currentPage = Page.PRACTICE;
     }
   }
 
