@@ -35,11 +35,11 @@ s.waitForBoot({
 	~minFreq = 90;
 	~maxFreq = 800;
 
-	~minAmp = 0.02; // amplitude threshold. under that, we consider the input as silence.
+	~minAmp = 0.1; // amplitude threshold. under that, we consider the input as silence.
 	~currentSection = -1;
 	~ampTresh_0 = 0.5; // considered "Hi amp" above this thresh.
 	~ampTresh_1 = 0.5; // considered "Hi amp" above this thresh.
-	~voicedThresh = 0.8; // considered singing above this thresh
+	~voicedThresh = 0.9; // considered singing above this thresh
 
 	~selectedCategory = 0;
 	~harmonizer = Synth(\pitchFollow1, [\which, ~selectedCategory]);
@@ -75,7 +75,7 @@ s.waitForBoot({
 	~sectionHistory = Array.fill(10, {|i| -1});
 
 	// Init fifos, for holding decision history
-	~fifoSize = 50;
+	~fifoSize = 10;
 	~fifos = Array.newClear(4);
 	~fifos[0] = Array.fill(~fifoSize, {|i| 0});
 	~fifos[1] = Array.fill(~fifoSize, {|i| 0});
@@ -115,13 +115,14 @@ s.waitForBoot({
 
 		var input, amp, pitch, hasFreq, onsets, chain;
 		input = In.ar(in,1);
-		amp = Amplitude.kr(input, releaseTime: 5);
+		amp = Amplitude.kr(input);
+		amp = amp * 10;
 		# pitch, hasFreq = Pitch.kr(input, minFreq:~minFreq, maxFreq:~maxFreq, downSample:2, median:10);
 		pitch = pitch.lag(5);
 
-		Out.kr(meterOut, amp.lag(5));
+		Out.kr(meterOut, amp);
 		Out.kr(pitchOut, (pitch * hasFreq / ~maxFreq).lag(1));
-		Out.kr(voicedOut, hasFreq.lag(2));
+		Out.kr(voicedOut, hasFreq);
 	}).add;
 
 	s.sync;
@@ -155,7 +156,7 @@ s.waitForBoot({
 							// Debug
 							"------------".postln;
 							sectionLikelihoods.postln;
-							postf("Category: %\n", ~selectedCategory);
+							// postf("Category: %\n", ~selectedCategory);
 
 /*							"AMP ".post; ampVal.postln;
 							"PITCH ".post; pitchVal.postln;

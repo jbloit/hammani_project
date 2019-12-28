@@ -8,19 +8,17 @@ FeedbackWidget feedbackbWidget;
 
 // These are the 4 sections START times, in seconds.
 // Edit to your needs, but make sure to keep the values within the bounds of your video duration.
-float[] sectionStarts = { 0, 15, 30, 45}; 
+float[] sectionStarts = { 0, 10, 20, 30}; 
 
 // These are the 4 sections END times, in seconds.
 // Edit to your needs, but make sure to keep the values within the bounds of your video duration.
-float[] sectionEnds = { 15, 30, 45, 53}; 
+float[] sectionEnds = { 10, 20, 30, 40}; 
 
 String[] sectionLabels = { "Soft singing", "Louder singing", "Soft noise", "Loud noise"}; 
 float[] currentTimes = sectionStarts;
 boolean[] playing = { false, false, false, false}; 
 float[] sectionLikelihoods = {0, 0, 0, 0};
-int sectionCount = 7;
-int currentSection = -1;
-int pitchSections = 3;
+
 Movie[] movies;
 PVector[] movieOrigins;
 
@@ -63,7 +61,7 @@ void setup() {
   movieOrigins = new PVector[4];
 
   for (int i = 0; i<4; i++) {
-    movies[i] = new Movie(this, "video.mp4");
+    movies[i] = new Movie(this, "testVideo.mov");
     movies[i].noLoop();
   }
 
