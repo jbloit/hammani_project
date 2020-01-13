@@ -77,7 +77,7 @@ s.waitForBoot({
 	~sectionHistory = Array.fill(10, {|i| -1});
 
 	// Init fifos, for holding decision history
-	~fifoSize = 20;
+	~fifoSize = 10;
 	~fifos = Array.newClear(4);
 	~fifos[0] = Array.fill(~fifoSize, {|i| 0});
 	~fifos[1] = Array.fill(~fifoSize, {|i| 0});

@@ -37,7 +37,7 @@ enum Page {
 Page currentPage = Page.PRACTICE;
 
 public void settings() {
-  size(800, 600);
+  fullScreen();
 }
 
 
