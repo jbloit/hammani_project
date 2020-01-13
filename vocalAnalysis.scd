@@ -50,10 +50,14 @@ s.waitForBoot({
 
 		var section = -1; // -1 represents the silent category, ie no input from user.
 		// amp.postln;
-		if (amp>~minAmp, {
+		if (amp > ~minAmp, {
 
 			if (hasFreq > ~voicedThresh, {
+
+				// postf("VOICED: ampThresh = %, amp = % \n", ~ampTresh_0, amp);
 				if (amp<~ampTresh_0,{
+
+
 					// voiced, low amp
 					section = 0;
 				}, {
