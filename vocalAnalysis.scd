@@ -33,9 +33,9 @@ s.waitForBoot({
 	~oscSendPeriod = 0.1; //sec
 
 	~minFreq = 90;
-	~maxFreq = 800;
+	~maxFreq = 2000;
 
-	~minAmp = 0.1; // amplitude threshold. under that, we consider the input as silence.
+	~minAmp = 0.01; // amplitude threshold. under that, we consider the input as silence.
 	~currentSection = -1;
 	~ampTresh_0 = 0.5; // considered "Hi amp" above this thresh.
 	~ampTresh_1 = 0.5; // considered "Hi amp" above this thresh.
@@ -47,7 +47,9 @@ s.waitForBoot({
 
 	// function to pick a video section index based on audio analysis
 	~decideSection = {|amp=0, freq=0, hasFreq=0|
+
 		var section = -1; // -1 represents the silent category, ie no input from user.
+		// amp.postln;
 		if (amp>~minAmp, {
 
 			if (hasFreq > ~voicedThresh, {
@@ -75,7 +77,7 @@ s.waitForBoot({
 	~sectionHistory = Array.fill(10, {|i| -1});
 
 	// Init fifos, for holding decision history
-	~fifoSize = 10;
+	~fifoSize = 20;
 	~fifos = Array.newClear(4);
 	~fifos[0] = Array.fill(~fifoSize, {|i| 0});
 	~fifos[1] = Array.fill(~fifoSize, {|i| 0});
@@ -117,9 +119,9 @@ s.waitForBoot({
 		input = In.ar(in,1);
 		amp = Amplitude.kr(input);
 		amp = amp * 10;
-		# pitch, hasFreq = Pitch.kr(input, minFreq:~minFreq, maxFreq:~maxFreq, downSample:2, median:10);
+		# pitch, hasFreq = Pitch.kr(input, minFreq:~minFreq, maxFreq:~maxFreq, downSample:2, median:1, clar:1);
 		pitch = pitch.lag(5);
-
+		// hasFreq.postln;
 		Out.kr(meterOut, amp);
 		Out.kr(pitchOut, (pitch * hasFreq / ~maxFreq).lag(1));
 		Out.kr(voicedOut, hasFreq);
@@ -159,8 +161,8 @@ s.waitForBoot({
 							// postf("Category: %\n", ~selectedCategory);
 
 /*							"AMP ".post; ampVal.postln;
-							"PITCH ".post; pitchVal.postln;
-							"VOICED ".post; voicedVal.postln;*/
+							"PITCH ".post; pitchVal.postln;*/
+							// "VOICED ".post; voicedVal.postln;
 
 
 							sectionLikelihoods.size.do({|i|
