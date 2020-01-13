@@ -1,4 +1,4 @@
-import processing.video.*;
+import processing.video.*; //<>//
 import oscP5.*;
 import netP5.*;
 
@@ -15,7 +15,7 @@ float[] sectionStarts = { 0, 10, 20, 30};
 float[] sectionEnds = { 10, 20, 30, 40}; 
 
 String[] sectionLabels = { "Soft singing", "Louder singing", "Soft noise", "Loud noise"}; 
-float[] currentTimes = sectionStarts;
+float[] currentTimes = new float[4] ;
 boolean[] playing = { false, false, false, false}; 
 float[] sectionLikelihoods = {0, 0, 0, 0};
 
@@ -37,12 +37,12 @@ enum Page {
 Page currentPage = Page.PRACTICE;
 
 public void settings() {
-  fullScreen();
+  //fullScreen();
+  size(800, 600);
 }
 
-
 void setup() {
-
+  arrayCopy(sectionStarts, currentTimes);
   scHost = new NetAddress("127.0.0.1", 57120);
 
   /* start oscP5, listening for incoming messages at port 12000 */
@@ -50,8 +50,6 @@ void setup() {
   oscP5.plug(this, "updateLikelihood", "/likelihood");
   oscP5.plug(this, "updateAmpThreshold_0", "/ampTresh_0");
   oscP5.plug(this, "updateAmpThreshold_1", "/ampTresh_1");
-
-
 
   // widget size
   int size = height/10;
@@ -140,7 +138,7 @@ void draw() {
     // draw bottom slider
     line(ampThreshold_0 * width, height/2, ampThreshold_0 * width, height);
     text(str(ampThreshold_0), ampThreshold_0 * width, height*3/4);
-     // draw upper slider 
+    // draw upper slider 
     line(ampThreshold_1 * width, 0, ampThreshold_1 * width, height/2);
     text(str(ampThreshold_1), ampThreshold_1 * width, height/4);
 
@@ -175,34 +173,40 @@ void draw() {
 }
 
 void reinitMovies() {
-  currentTimes = sectionStarts;
+  arrayCopy(sectionStarts, currentTimes);
   for (int i = 0; i<4; i++) {
     movies[i].jump(currentTimes[i]);
     movies[i].stop();
     playing[i] = false;
-  }
+  }  
 }
 
 void drawVideo(int i) {
 
-
-  if (currentTimes[i] >= sectionEnds[i]) {
-    currentTimes[i] = sectionStarts[i];
-  }
-
   if (sectionLikelihoods[i] > 0.1) {
-    if (!playing[i]) {
+    if (!playing[i]) 
+    {
       movies[i].play();
       movies[i].jump(currentTimes[i]);
       playing[i] = true;
-    } else {
+    } else 
+    {
       currentTimes[i] = movies[i].time();
+      if (currentTimes[i] >= sectionEnds[i]) 
+      {
+        // loop
+        playing[i] = false;
+        currentTimes[i] = sectionStarts[i];
+        movies[i].pause();
+      }
     }
 
     tint(255, sectionLikelihoods[i]*255);
     image(movies[i], movieOrigins[i].x, movieOrigins[i].y, width/2, height/2);
     movies[i].volume(sectionLikelihoods[i]);
-  } else {
+  } 
+  else 
+  {
     movies[i].pause();
     playing[i] = false;
   }
