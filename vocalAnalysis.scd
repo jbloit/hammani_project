@@ -36,10 +36,15 @@ s.waitForBoot({
 	~maxFreq = 2000;
 
 	~minAmp = 0.01; // amplitude threshold. under that, we consider the input as silence.
+	~maxVoicedAmp = ~minAmp;
+	~maxNoisedAmp = ~minAmp;
+
 	~currentSection = -1;
 	~ampTresh_0 = 0.5; // considered "Hi amp" above this thresh.
 	~ampTresh_1 = 0.5; // considered "Hi amp" above this thresh.
 	~voicedThresh = 0.9; // considered singing above this thresh
+
+
 
 	~selectedCategory = 0;
 	~harmonizer = Synth(\pitchFollow1, [\which, ~selectedCategory]);
@@ -54,8 +59,11 @@ s.waitForBoot({
 
 			if (hasFreq > ~voicedThresh, {
 
-				// postf("VOICED: ampThresh = %, amp = % \n", ~ampTresh_0, amp);
-				if (amp<~ampTresh_0,{
+				~maxVoicedAmp = ~maxVoicedAmp.max(amp);
+				amp = amp.linlin(~minAmp, ~maxVoicedAmp, 0, 1);
+				// amp = amp.explin(~minAmp, ~ampTresh_0, ~minAmp, 1);
+				postf("VOICED: ampThresh = %, amp = % \n", ~ampTresh_0, amp);
+				if (amp < ~ampTresh_0,{
 
 
 					// voiced, low amp
@@ -65,7 +73,12 @@ s.waitForBoot({
 					section = 1;
 				});
 			}, {
-				if (amp<~ampTresh_1,{
+
+				~maxNoisedAmp = ~maxNoisedAmp.max(amp);
+				amp = amp.linlin(~minAmp, ~maxNoisedAmp, 0, 1);
+				postf("NOT VOICED: ampThresh = %, amp = % \n", ~ampTresh_1, amp);
+
+				if (amp < ~ampTresh_1,{
 					// soft noise
 					section = 2;
 				}, {
@@ -160,8 +173,8 @@ s.waitForBoot({
 							~harmonizer.set(\which, ~selectedCategory);
 
 							// Debug
-							"------------".postln;
-							sectionLikelihoods.postln;
+/*							"------------".postln;
+							sectionLikelihoods.postln;*/
 							// postf("Category: %\n", ~selectedCategory);
 
 /*							"AMP ".post; ampVal.postln;
