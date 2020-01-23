@@ -25,7 +25,7 @@ s.waitForBoot({
 
 
 	~inputCount = 1; // number of mics
-	~oscSendPeriod = 0.1; //sec
+	~oscSendPeriod = 0.01; //sec
 
 	~minFreq = 90;
 	~maxFreq = 2000;
@@ -57,9 +57,9 @@ s.waitForBoot({
 				~maxVoicedAmp = ~maxVoicedAmp.max(amp);
 				amp = amp.linlin(~minAmp, ~maxVoicedAmp, 0, 1);
 				// amp = amp.explin(~minAmp, ~ampTresh_0, ~minAmp, 1);
-				postf("VOICED: ampThresh = %, amp = % \n", ~ampTresh_0, amp);
+				// postf("VOICED: ampThresh = %, amp = % \n", ~ampTresh_0, amp);
+				~uiMachine.sendMsg("/voicedAmp", amp);
 				if (amp < ~ampTresh_0,{
-
 
 					// voiced, low amp
 					section = 0;
@@ -71,8 +71,8 @@ s.waitForBoot({
 
 				~maxNoisedAmp = ~maxNoisedAmp.max(amp);
 				amp = amp.linlin(~minAmp, ~maxNoisedAmp, 0, 1);
-				postf("NOT VOICED: ampThresh = %, amp = % \n", ~ampTresh_1, amp);
-
+				// postf("NOT VOICED: ampThresh = %, amp = % \n", ~ampTresh_1, amp);
+				~uiMachine.sendMsg("/unvoicedAmp", amp);
 				if (amp < ~ampTresh_1,{
 					// soft noise
 					section = 2;
@@ -89,7 +89,7 @@ s.waitForBoot({
 	~sectionHistory = Array.fill(10, {|i| -1});
 
 	// Init fifos, for holding decision history
-	~fifoSize = 10;
+	~fifoSize = 30;
 	~fifos = Array.newClear(4);
 	~fifos[0] = Array.fill(~fifoSize, {|i| 0});
 	~fifos[1] = Array.fill(~fifoSize, {|i| 0});
@@ -130,10 +130,9 @@ s.waitForBoot({
 		var input, amp, pitch, hasFreq, onsets, chain;
 		input = In.ar(in,1);
 		amp = Amplitude.kr(input);
-		amp = amp * 10;
+		amp = amp.lag(1);
 		# pitch, hasFreq = Pitch.kr(input, minFreq:~minFreq, maxFreq:~maxFreq, downSample:2, median:1, clar:1);
-		pitch = pitch.lag(5);
-		// hasFreq.postln;
+		hasFreq = Slew.kr(hasFreq, 1, 0.1);
 		Out.kr(meterOut, amp);
 		Out.kr(pitchOut, (pitch * hasFreq / ~maxFreq).lag(1));
 		Out.kr(voicedOut, hasFreq);
@@ -168,8 +167,8 @@ s.waitForBoot({
 							~harmonizer.set(\which, ~selectedCategory);
 
 							// Debug
-/*							"------------".postln;
-							sectionLikelihoods.postln;*/
+							"------------".postln;
+							sectionLikelihoods.postln;
 							// postf("Category: %\n", ~selectedCategory);
 
 /*							"AMP ".post; ampVal.postln;

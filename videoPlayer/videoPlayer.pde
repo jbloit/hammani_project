@@ -1,4 +1,4 @@
-import processing.video.*; //<>//
+import processing.video.*; //<>// //<>//
 import oscP5.*;
 import netP5.*;
 
@@ -26,6 +26,12 @@ PVector[] movieOrigins;
 float ampThreshold_0 = 0.5;
 float ampThreshold_1 = 0.5;
 
+// Voiced and unvoiced amplitudes
+float voicedAmp = 0;
+float unvoicedAmp = 0;
+int voicedAlive = 255;
+int unvoicedAlive = 255;
+
 
 // super collider server address
 NetAddress scHost;
@@ -37,8 +43,8 @@ enum Page {
 Page currentPage = Page.PRACTICE;
 
 public void settings() {
-  //fullScreen();
-  size(800, 600);
+  fullScreen();
+  //size(800, 600);
 }
 
 void setup() {
@@ -50,6 +56,8 @@ void setup() {
   oscP5.plug(this, "updateLikelihood", "/likelihood");
   oscP5.plug(this, "updateAmpThreshold_0", "/ampTresh_0");
   oscP5.plug(this, "updateAmpThreshold_1", "/ampTresh_1");
+  oscP5.plug(this, "displayVoicedAmp", "/voicedAmp");
+  oscP5.plug(this, "displayUnvoicedAmp", "/unvoicedAmp");
 
   // widget size
   int size = height/10;
@@ -135,12 +143,27 @@ void draw() {
     textSize(16);
     fill(60);
     stroke(30);
+    
     // draw bottom slider
     line(ampThreshold_0 * width, height/2, ampThreshold_0 * width, height);
     text(str(ampThreshold_0), ampThreshold_0 * width, height*3/4);
+   
     // draw upper slider 
     line(ampThreshold_1 * width, 0, ampThreshold_1 * width, height/2);
     text(str(ampThreshold_1), ampThreshold_1 * width, height/4);
+
+   
+    // bottom amplitude meter (voiced)
+    voicedAlive = voicedAlive - 10;
+    if (voicedAlive < 0) voicedAlive = 0;
+    stroke(255, 0, 0, voicedAlive);
+    line(voicedAmp * width, height/2, voicedAmp * width, height);
+
+    // upper amplitude meter (unvoiced)
+    unvoicedAlive = unvoicedAlive - 10;
+    if (unvoicedAlive < 0) unvoicedAlive = 0;
+     stroke(255, 0, 0, unvoicedAlive);
+    line(unvoicedAmp * width, 0, unvoicedAmp * width, height/2);
 
     // draw large feedback widget
     feedbackbWidget.x = width/2;
@@ -234,4 +257,16 @@ public void updateAmpThreshold_0(float value) {
 public void updateAmpThreshold_1(float value) {
   //println("osc in AMP thresh " + str(value));
   ampThreshold_1 = value;
+}
+
+public void displayVoicedAmp(float value) {
+  //println("VoicedAmp " + str(value));
+  voicedAmp = value;
+  voicedAlive = 255;
+}
+
+public void displayUnvoicedAmp(float value) {
+  //println("UnvoicedAmp " + str(value));
+  unvoicedAmp = value;
+  unvoicedAlive = 255;
 }
