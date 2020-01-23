@@ -2,11 +2,6 @@
 Run a pitch analysis periodically and send values over OSC
 */
 
-// s.options.inDevice_("UMC202HD 192k");
-// s.options.outDevice_("UMC202HD 192k");
-// s.options.inDevice_("Fireface UC Mac (23669936)");
-// s.options.outDevice_("Fireface UC Mac (23669936)");
-
 s.waitForBoot({
 	//////////////////////////////////// synth def and busses
 
